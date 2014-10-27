@@ -44,7 +44,7 @@ class WalletController {
     var usrObj = walletSvcObj.addUser(usr.getEmail, usr.getPassword)
 
     var jsonResponse: JsonObject = new JsonObject()
-    jsonResponse.addProperty("id", "u-" + usrObj.getUser_id)
+    jsonResponse.addProperty("id", usrObj.getUser_id)
     jsonResponse.addProperty("email", usrObj.getEmail)
     jsonResponse.addProperty("password", usrObj.getPassword)
     jsonResponse.addProperty("created_at", abc.format(usrObj.getCreatedAt) + "Z")
@@ -60,7 +60,7 @@ class WalletController {
     var usrObj = walletSvcObj.viewUser(userId)
     var jsonResponse: JsonObject = new JsonObject()
 
-    jsonResponse.addProperty("id", "u-" + usrObj.getUser_id)
+    jsonResponse.addProperty("id", usrObj.getUser_id)
     jsonResponse.addProperty("email", usrObj.getEmail)
     jsonResponse.addProperty("password", usrObj.getPassword)
     jsonResponse.addProperty("created_at", abc.format(usrObj.getCreatedAt) + "Z")
@@ -76,7 +76,7 @@ class WalletController {
     var updtUserObj = walletSvcObj.updtUserInformation(userId, usr.getEmail, usr.getPassword)
 
     var jsonResponse: JsonObject = new JsonObject()
-    jsonResponse.addProperty("id", "u-" + updtUserObj.getUser_id)
+    jsonResponse.addProperty("id", updtUserObj.getUser_id)
     jsonResponse.addProperty("email", updtUserObj.getEmail)
     jsonResponse.addProperty("password", updtUserObj.getPassword)
     jsonResponse.addProperty("created_at", abc.format(updtUserObj.getCreatedAt) + "Z")
@@ -212,7 +212,7 @@ class WalletController {
     var acc_name: String = " "
 
     if (bankAccount.getAccount_name == null) {
-      acc_name = null
+      acc_name = bankAccount.getAccount_name
     } else {
       acc_name = bankAccount.getAccount_name
     }
@@ -222,10 +222,10 @@ class WalletController {
     var jsonResponse: JsonObject = new JsonObject
     jsonResponse.addProperty("ba_id", "b-" + bankAccObj.getBa_id)
 
-    if (acc_name != null) {
+ 
       jsonResponse.addProperty("account_name", bankAccObj.getAccount_name)
 
-    }
+  
 
     jsonResponse.addProperty("routing_number", bankAccObj.getRouting_number)
     jsonResponse.addProperty("account_number", bankAccObj.getAccount_number)

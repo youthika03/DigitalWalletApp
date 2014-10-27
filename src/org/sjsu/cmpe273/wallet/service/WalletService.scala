@@ -1,238 +1,242 @@
 package org.sjsu.cmpe273.wallet.service
 
-import org.sjsu.cmpe273.entity.User
-import java.text.SimpleDateFormat
-import java.util.Date
-import org.sjsu.cmpe273.wallet.dao.WalletDAO
-import org.sjsu.cmpe273.entity.IDCard
-import org.sjsu.cmpe273.entity.WebLogin
-import java.util.HashMap.Entry
-import org.sjsu.cmpe273.entity.IDCard
-import java.util.List
 import java.util.ArrayList
+import java.util.Date
+import java.util.List
 import org.sjsu.cmpe273.entity.BankAccount
-import java.util.Formatter.DateTime
+import org.sjsu.cmpe273.entity.IDCard
+import org.sjsu.cmpe273.entity.User
+import org.sjsu.cmpe273.entity.WebLogin
+import org.sjsu.cmpe273.wallet.dao.WalletDAO
 import org.springframework.stereotype.Component
+import org.springframework.beans.factory.annotation.Autowired
+import com.google.gson.JsonObject
+import com.google.gson.JsonParser
 
 @Component
 class WalletService {
+
+  @Autowired
+  var walletDao: WalletDAO = _
 
   var date: String = _;
   var currSeqNbr: Int = 123450;
   val expDateFormat = new java.text.SimpleDateFormat("MM-dd-yyyy")
 
   //Used to generate a random number for UserId, CardId
-  def getNextNumber() : Int = {
-    currSeqNbr = currSeqNbr +1;
+  def getNextNumber(): Int = {
+    currSeqNbr = currSeqNbr + 1;
     return currSeqNbr
   }
-  
+
   //below are conversion of id's from string to Int and vice versa.
   def convertUserIdToString(usrIdInInt: Int): String = {
     return ("u-" + usrIdInInt.toString())
   }
-  
-   def convertUserIdToInt(usrIdInString: String): Int = {
+
+  def convertUserIdToInt(usrIdInString: String): Int = {
     return (usrIdInString.substring(2)).toInt
- }
-  
-    def convertCardIdToString(cardIdInInt: Int): String = {
+  }
+
+  def convertCardIdToString(cardIdInInt: Int): String = {
     return ("c-" + cardIdInInt.toString())
   }
-    
+
   def convertCardIdToInt(cardIdInString: String): Int = {
     return (cardIdInString.substring(2)).toInt
   }
-  
+
   def convertWebLoginIdToString(loginIdInInt: Int): String = {
     return ("l-" + loginIdInInt.toString())
   }
-  
+
   def convertWebLoginIdToInt(loginIdInString: String): Int = {
     return (loginIdInString.substring(2)).toInt
- }
-  
+  }
+
   def convertBankAccIdToString(BankIdInInt: Int): String = {
     return ("b-" + BankIdInInt.toString())
   }
-  
+
   def convertBankAccIdToInt(BankIdInString: String): Int = {
     return (BankIdInString.substring(2)).toInt
- }
-  
- 
-  
+  }
+
   //formating the Date-Time for created at to "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
   def generateCreatedAt(): Date = {
 
     val abc = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ" + "Z")
     var date = abc.format(new Date());
 
-    
     return abc.parse(date)
   }
-  
-  
+
   //1. Create User
   def addUser(email: String, password: String): User = {
     val createUser: User = new User
-    createUser.setUser_id(getNextNumber())
+    createUser.setUser_id("u-" + getNextNumber())
     createUser.setEmail(email)
     createUser.setPassword(password)
     createUser.setCreatedAt(generateCreatedAt())
-    WalletDAO.createUser(createUser)
-    
+    walletDao.upsertUser(createUser)
+
     return createUser
   }
-  
+
   //2. View User
   def viewUser(usrId: String): User = {
-    val usrIdAftrConversion: Int = convertUserIdToInt(usrId);
-    val obj=WalletDAO.findUser(usrIdAftrConversion)
-    
+    val obj = walletDao.findUser(usrId)
     return obj
   }
-  
+
   //3. Update User
   def updtUserInformation(usrId: String, email: String, passwrd: String): User = {
-    var usr:User=new User
-    val usrIdAftrConversion: Int = convertUserIdToInt(usrId);
-    usr = WalletDAO.findUser(usrIdAftrConversion);
+    var usr: User = new User
+    usr = walletDao.findUser(usrId);
     usr.setEmail(email)
     usr.setPassword(passwrd)
-    WalletDAO.updtUser(usr)
+    walletDao.upsertUser(usr)
     return usr;
   }
-  
+
   //4. Create ID Card
-  def addIDCard(usrId: String, crdName: String, crdNmbr: String, expDte: String):IDCard = {
+  def addIDCard(usrId: String, crdName: String, crdNmbr: String, expDte: String): IDCard = {
     val createIdCard: IDCard = new IDCard
-    val usrIdAftrConversion: Int = convertUserIdToInt(usrId);
-    val usrObj: User = WalletDAO.findUser(usrIdAftrConversion)
-    
+    val usrObj: User = walletDao.findUser(usrId)
+
     //createUser.idCardMap(usrIdAftrConversion)
     createIdCard.setCard_id(getNextNumber)
     createIdCard.setCard_name(crdName)
     createIdCard.setCard_number(crdNmbr)
-    if (expDte ==null){
+    if (expDte == null) {
       createIdCard.setExpiration_date(null)
-    }else {
-      createIdCard.setExpDateAsDate(expDateFormat.parse(expDte)) 
+    } else {
+      createIdCard.setExpDateAsDate(expDateFormat.parse(expDte))
     }
-    usrObj.getIdCardMap.put( createIdCard.getCard_id, createIdCard)
-    
+    usrObj.getIdCardMap.put(createIdCard.getCard_id, createIdCard)
+
     return createIdCard
-   }
-  
+  }
+
   //5. List All ID Cards
   def viewIDCard(usrId: String): List[IDCard] = {
-    val usrIdAftrConversion: Int = convertUserIdToInt(usrId)
-    var usrObj:User= WalletDAO.findUser(usrIdAftrConversion)
+    var usrObj: User = walletDao.findUser(usrId)
     var idMap = usrObj.getIdCardMap
-    var setOfKeys = idMap.keySet
-    var listOfCards= new ArrayList[IDCard]()
-    setOfKeys.foreach((cardIdKey) =>
-       listOfCards.add(idMap.get(cardIdKey).get)
-    )
-    return listOfCards
+//    var setOfKeys = idMap.keySet
+//    var listOfCards = new ArrayList[IDCard]()
+//    setOfKeys.foreach((cardIdKey) =>
+//      listOfCards.add(idMap.get(cardIdKey)))
+//    return listOfCards
+    
+     val values = idMap.values()
+    return new ArrayList(values);
   }
-  
 
   //6. Delete ID Card
-  def deleteIDCard(usrId:String, cardId:String) ={
-    val usrIdAftrConversion: Int = convertUserIdToInt(usrId)
+  def deleteIDCard(usrId: String, cardId: String) = {
     val cardIdAftrConversion: Int = convertCardIdToInt(cardId)
-    var usrObj:User= WalletDAO.findUser(usrIdAftrConversion)
-    
+    var usrObj: User = walletDao.findUser(usrId)
+
     usrObj.idCardMap.remove(cardIdAftrConversion)
   }
-  
+
   //7. Create Web Login
-  def addWebLogin(usrId:String, url:String, login:String, loginPasswrd:String): WebLogin={
+  def addWebLogin(usrId: String, url: String, login: String, loginPasswrd: String): WebLogin = {
     val usrIdAftrConversion: Int = convertUserIdToInt(usrId)
-    val createWebLogin: WebLogin= new WebLogin
-    val usrObj: User= WalletDAO.findUser(usrIdAftrConversion)
-    
+    val createWebLogin: WebLogin = new WebLogin
+    val usrObj: User = walletDao.findUser(usrId)
+
     createWebLogin.setLogin_id(getNextNumber)
-    createWebLogin.setUrl(url) 
+    createWebLogin.setUrl(url)
     createWebLogin.setLogin(login)
     createWebLogin.setPassword(loginPasswrd)
-    
-    usrObj.getWebLoginMap.put(createWebLogin.getLogin_id,createWebLogin )
-    
+
+    usrObj.getWebLoginMap.put(createWebLogin.getLogin_id, createWebLogin)
+
     return createWebLogin
- }
-  
+  }
+
   //8. List All Web-site Logins
   def viewAllWebLogin(usrId: String): List[WebLogin] = {
-    val usrIdAftrConversion: Int = convertUserIdToInt(usrId)
-    var usrObj:User= WalletDAO.findUser(usrIdAftrConversion)
-    
+    var usrObj: User = walletDao.findUser(usrId)
+
     var idMap = usrObj.getWebLoginMap
     var setOfKeys = idMap.keySet
-    var listOfWebLogin= new ArrayList[WebLogin]()
-    setOfKeys.foreach((webLoginIdKey) =>
-       listOfWebLogin.add(idMap.get(webLoginIdKey).get)
-    )
-    return listOfWebLogin
+//    var listOfWebLogin = new ArrayList[WebLogin]()
+//    setOfKeys.foreach((webLoginIdKey) =>
+//      listOfWebLogin.add(idMap.get(webLoginIdKey)))
+//    return listOfWebLogin
+    val values = idMap.values()
+    new ArrayList(values);
   }
-  
+
   //9. Delete Web Login
-  def deleteWebLogin(usrId:String, loginId:String)={
-    val usrIdAftrConversion: Int = convertUserIdToInt(usrId)
+  def deleteWebLogin(usrId: String, loginId: String) = {
     val webLoginIdAftrConversion: Int = convertWebLoginIdToInt(loginId)
-    
-    var usrObj:User= WalletDAO.findUser(usrIdAftrConversion)
+
+    var usrObj: User = walletDao.findUser(usrId)
     usrObj.webLoginMap.remove(webLoginIdAftrConversion)
-    
+
   }
-  
+
   //10. Create Bank Account
-  def addBankAccount(usrId:String, accName:String, routNmber:String, accNmber:String ): BankAccount={
-    val usrIdAftrConversion: Int = convertUserIdToInt(usrId)
-    val createBankAccId: BankAccount= new BankAccount
-    val usrObj: User= WalletDAO.findUser(usrIdAftrConversion)
-    
+  def addBankAccount(usrId: String, accName: String, routNmber: String, accNmber: String): BankAccount = {
+    val createBankAccId: BankAccount = new BankAccount
+    val usrObj: User = walletDao.findUser(usrId)
+
     createBankAccId.setBa_id(getNextNumber)
-    
-    if (accName ==null){
-      createBankAccId.setAccount_name(null)
-    }else {
-      createBankAccId.setAccount_name(accName) 
+
+    if (accName == null) {
+      createBankAccId.setAccount_name(this.GetUrlContent(routNmber))
+    } else {
+      createBankAccId.setAccount_name(accName)
     }
-    
+
     createBankAccId.setRouting_number(routNmber)
     createBankAccId.setAccount_number(accNmber)
-    
-    usrObj.getBankAccountMap.put(createBankAccId.getBa_id,createBankAccId )
-    
+
+    usrObj.getBankAccountMap.put(createBankAccId.getBa_id, createBankAccId)
+
     return createBankAccId
   }
-  
+
   //11. List All Bank Accounts
   def viewAllBankAccounts(usrId: String): List[BankAccount] = {
-    val usrIdAftrConversion: Int = convertUserIdToInt(usrId)
-    var usrObj:User= WalletDAO.findUser(usrIdAftrConversion)
-    
+    var usrObj: User = walletDao.findUser(usrId)
+
     var idMap = usrObj.getBankAccountMap()
     var setOfKeys = idMap.keySet
-    var listOfBankAcc= new ArrayList[BankAccount]()
-    setOfKeys.foreach((bnkAccIdKey) =>
-       listOfBankAcc.add(idMap.get(bnkAccIdKey).get)
-    )
-    return listOfBankAcc
+//    var listOfBankAcc = new ArrayList[BankAccount]()
+//    setOfKeys.foreach((bnkAccIdKey) =>
+//      listOfBankAcc.add(idMap.get(bnkAccIdKey)))
+//    return listOfBankAcc
+    
+    val values = idMap.values()
+    new ArrayList(values);
   }
-  
- //12. Delete Bank Account
-  def deleteBankAccount(usrId: String, bankAccId:String)= {
-    val usrIdAftrConversion: Int = convertUserIdToInt(usrId)
+
+  //12. Delete Bank Account
+  def deleteBankAccount(usrId: String, bankAccId: String) = {
     val bankAccIdAftrConversion: Int = convertWebLoginIdToInt(bankAccId)
-    
-    var usrObj:User= WalletDAO.findUser(usrIdAftrConversion)
+
+    var usrObj: User = walletDao.findUser(usrId)
     usrObj.bankAccMap.remove(bankAccIdAftrConversion)
-    
+
   }
   
+  //13. Calling REST API
+  def GetUrlContent(routNmber:String):String ={
+
+  val url = "http://www.routingnumbers.info/api/data.json?rn=121000358"
+  val result = scala.io.Source.fromURL(url).mkString
+  val parser:JsonParser = new JsonParser();
+  val jsonObj:JsonObject=new JsonParser().parse(result).getAsJsonObject();
+
+  var accName=jsonObj.get("customer_name").getAsString()
+ return accName.toString()
+  }  
+
+
 }
 	
 	

@@ -13,10 +13,11 @@ import org.springframework.web.bind.annotation.PathVariable
 
 object Main {
   def main(args: Array[String]) {
-    val configuration: Array[Object] = Array(classOf[Config])
+    val configuration: Array[Object] = Array(classOf[Config],classOf[MongoConfig])
     SpringApplication.run(configuration, args)
   }
 }
+
 
 @EnableAutoConfiguration
 @ComponentScan

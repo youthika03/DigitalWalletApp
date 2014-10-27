@@ -1,31 +1,52 @@
 package org.sjsu.cmpe273.wallet.dao
 
-import org.sjsu.cmpe273.entity.User;
+import org.springframework.stereotype.Component
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.mongodb.core.MongoOperations
+import org.sjsu.cmpe273.entity.User
+import com.google.gson.Gson
+import org.springframework.data.mongodb.core.query.Criteria
+import org.springframework.data.mongodb.core.query.Query
+import org.sjsu.cmpe273.entity.User
+import org.sjsu.cmpe273.entity.User
 
-object WalletDAO {
+@Component
+class WalletDAO {
+
+  @Autowired
+  var mongoOperations: MongoOperations = _;
+  
+  val userCollection:String="userCollection"
+  val id:String="_id"
 
   val userObj: User = new User();
-  var userMap = scala.collection.mutable.Map[Int, User]();
+  var userMap = scala.collection.mutable.Map[String, User]();
 
-  def createUser(userObj: User): Unit = {
+  def upsertUser(userObj: User): Unit = {
     val userId = userObj.getUser_id;
-    userMap.put(userId, userObj);
+    val userJson = new Gson().toJson(userObj);
+    mongoOperations.save(userObj, userCollection)
+    userMap.put(userId, userObj)
   }
 
-  def findUser(usrId: Int): User = {
-    if (userMap.get(usrId).isEmpty) {
-      return null
-    } else {
-      return userMap.get(usrId).get
-    }
+  def findUser(usrId: String): User = {
+
+    var query: Query = new Query();
+    query.addCriteria(Criteria.where(id).is(usrId))
+    mongoOperations.findOne(query, classOf[User],userCollection );
+
   }
 
-  def updtUser(usrObj: User): Unit = {
+  /*def updtUser(usrObj: User): Unit = {
+   
     userMap.put(userObj.getUser_id, userObj)
-  }
+  }*/
 
-  def delUser(userId: Int): Unit = {
-    userMap.remove(userId)
+  def delUser(userId: String): Unit = {
+    var criteria: Criteria = new Criteria(id);
+    criteria.in(userId);
+    var query: Query = new Query(criteria);
+    mongoOperations.remove(query,userCollection)
   }
 
 }

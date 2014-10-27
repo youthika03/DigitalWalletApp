@@ -8,6 +8,7 @@ buildscript {
     }
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:1.1.6.RELEASE")
+        classpath("com.github.rholder:gradle-one-jar:1.0.3")
     }
 }
 
@@ -17,11 +18,12 @@ apply plugin: 'eclipse'
 apply plugin: 'eclipse-wtp'
 apply plugin: 'idea'
 apply plugin: 'spring-boot'
+apply plugin: 'gradle-one-jar'
 
 
 jar {
-    baseName = 'hello'
-    version =  '0.1.0'
+    baseName = 'wallet'
+    version =  '0.1.1'
 }
 
 bootRepackage {
@@ -40,8 +42,9 @@ dependencies {
     compile group: 'com.google.code.gson', name: 'gson', version: '1.7.2'
     compile("org.springframework.boot:spring-boot-starter-web")
     compile("org.hibernate:hibernate-validator:4.2.0.Final")
+    compile("org.springframework.boot:spring-boot-starter-data-mongodb")
     testCompile("org.springframework.boot:spring-boot-starter-test")
-    compile("org.scala-lang:scala-library:2.10.4")
+compile("org.scala-lang:scala-library:2.10.4")
     compile("org.webjars:bootstrap:3.1.1")
     testCompile("junit:junit")
     
