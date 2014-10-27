@@ -53,3 +53,7 @@ compile("org.scala-lang:scala-library:2.10.4")
 task wrapper(type: Wrapper) {
     gradleVersion = '2.1'
 }
+
+task awesomeOneJar (type:OneJar){
+    mainClass = 'org.sjsu.cmpe273.Main'
+}
